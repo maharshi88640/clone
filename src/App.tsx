@@ -30,8 +30,16 @@ const AppContent: React.FC = () => {
   // Check if current URL is an OAuth callback
   React.useEffect(() => {
     const path = window.location.pathname;
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
     if (path.includes('/auth/google/callback') || path.includes('/auth/apple/callback')) {
-      setShowOAuthCallback(true);
+      if (code) {
+        setShowOAuthCallback(true);
+      } else {
+        // Redirect to root if OAuth callback URL is missing the code parameter
+        window.location.href = '/';
+      }
     }
   }, []);
 
