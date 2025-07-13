@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Users, Mail, Lock, Eye, EyeOff, User, ArrowRight, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { signInWithGoogle, signInWithApple } from '../firebase';
+import { initiateGoogleOAuth, initiateAppleOAuth } from '../utils/oauth';
 
 interface LoginProps {
   onSuccess: () => void;
@@ -80,30 +80,21 @@ const Login: React.FC<LoginProps> = ({ onSuccess, onOAuthStart }) => {
     setError('');
 
     try {
-      let userData;
       if (provider === 'google') {
-        userData = await signInWithGoogle();
+        await initiateGoogleOAuth();
       } else {
-        userData = await signInWithApple();
+        await initiateAppleOAuth();
       }
-
-      if (!userData || !userData.email) {
-        throw new Error('Failed to retrieve user data from provider');
-      }
-
-      // Use loginWithOAuth from context to login or create user
-      const success = await loginWithOAuth(provider, userData);
-
-      if (success) {
-        onSuccess();
-      } else {
-        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} account linked successfully! You can now sign in.`);
-      }
+      // OAuth initiation successful - user will be redirected to provider
     } catch (err) {
       setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} authentication failed. Please try again.`);
+      if (provider === 'google') {
+        setGoogleLoading(false);
+      } else {
+        setAppleLoading(false);
+      }
     } finally {
-      setGoogleLoading(false);
-      setAppleLoading(false);
+      // Don't reset loading states here as user will be redirected
     }
   };
 
